@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto-Code Janitor Agent Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+        <header class="border-b border-gray-800 pb-6 mb-8 flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 tracking-tight">Auto-Code Janitor</h1>
+                <p class="text-gray-400 text-sm mt-1">Autonomous Multi-Turn Codebase Optimization Engine</p>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Gemini Core 2.5 Active</span>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="bg-gray-800/50 border border-gray-800 rounded-xl p-6 h-fit backdrop-blur-sm">
+                <h2 class="text-lg font-bold mb-4 text-gray-200">Execution Parameters</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Target Project ID</label>
+                        <input id="projectId" type="text" value="payments-api-94" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Repository Branch</label>
+                        <input id="branchName" type="text" value="main" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Janitor Migration Goal</label>
+                        <textarea id="userPrompt" rows="4" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500">Upgrade my payments api to python 3.11 and migrate to pydantic v2</textarea>
+                    </div>
+                    <button id="runBtn" onclick="triggerAgentCycle()" class="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 transition-all text-white font-semibold rounded-lg py-2.5 text-sm shadow-lg shadow-blue-900/20 flex justify-center items-center">
+                        Execute Agent Turn
+                    </button>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 flex flex-col space-y-6">
+                <div class="bg-gray-950 border border-gray-800 rounded-xl flex-1 flex flex-col overflow-hidden h-[540px]">
+                    <div class="bg-gray-900 px-4 py-3 border-b border-gray-800 flex justify-between items-center">
+                        <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Live Agent Action Feed</span>
+                        <div id="loadingIndicator" class="hidden text-xs text-blue-400 flex items-center space-x-1">
+                            <svg class="animate-spin h-3 w-3 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <span>Model is thinking...</span>
+                        </div>
+                    </div>
+                    
+                    <div id="logStream" class="p-4 space-y-4 overflow-y-auto flex-1 font-mono text-xs leading-relaxed">
+                        <div class="text-gray-500 italic">// Initialize an optimization task on the left to review telemetry...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function triggerAgentCycle() {
+            const logStream = document.getElementById("logStream");
+            const runBtn = document.getElementById("runBtn");
+            const loader = document.getElementById("loadingIndicator");
+            
+            // Setup loading display UI properties
+            loader.classList.remove("hidden");
+            runBtn.disabled = true;
+            runBtn.classList.add("opacity-50");
+            
+            logStream.innerHTML = `<div class="text-blue-400 animate-pulse">[INITIATING TRANSMISSION] Shipping payload metadata blocks down to the FastAPI socket framework...</div>`;
+
+            try {
+                const response = await fetch("/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        prompt: document.getElementById("userPrompt").value,
+                        project_id: document.getElementById("projectId").value,
+                        branch: document.getElementById("branchName").value
+                    })
+                });
+
+                const data = await response.json();
+                loader.classList.add("hidden");
+                runBtn.disabled = false;
+                runBtn.classList.remove("opacity-50");
+
+                if (!response.ok) throw new Error(data.detail || "Server runtime rejection");
+
+                // Render out the dynamic multi-turn step traces cleanly inside our console box
+                logStream.innerHTML = `
+                    <div class="border-l-2 border-blue-500 pl-3">
+                        <span class="text-blue-400 font-bold">[🧠 USER PROMPT]</span><br>
+                        <span class="text-gray-300">${data.user_prompt}</span>
+                    </div>
+                    
+                    <div class="border-l-2 border-purple-500 pl-3 mt-4">
+                        <span class="text-purple-400 font-bold">[🔮 GEMINI THOUGHT]</span><br>
+                        <span class="text-gray-300">${data.agent_thought}</span>
+                    </div>
+                    
+                    <div class="border-l-2 border-amber-500 pl-3 mt-4">
+                        <span class="text-amber-400 font-bold">[🛠️ DECIDED NEXT ACTION / TOOL CALL]</span><br>
+                        <span class="text-amber-200 bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-900/50 inline-block mt-1">${data.next_action}()</span>
+                    </div>
+                    
+                    <div class="border-l-2 border-rose-500 pl-3 mt-4">
+                        <span class="text-rose-400 font-bold">[📡 LOCAL PLATFORM MCP RESPONSE]</span>
+                        <pre class="bg-gray-950 p-3 rounded-lg border border-gray-800 text-rose-300 overflow-x-auto max-w-full mt-1 whitespace-pre-wrap">${JSON.stringify(data.tool_response, null, 2)}</pre>
+                    </div>
+                `;
+
+            } catch (err) {
+                loader.classList.add("hidden");
+                runBtn.disabled = false;
+                runBtn.classList.remove("opacity-50");
+                logStream.innerHTML = `<div class="text-rose-400 font-bold">[❌ RUNTIME EXCEPTION CAUGHT] ${err.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
