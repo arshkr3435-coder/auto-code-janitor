@@ -12,8 +12,7 @@ app = FastAPI(
     description="Production-grade runtime gateway powered by Gemini 2.5."
 )
 
-# Initialize the official GenAI Client 
-# (Replace the placeholder text below with your real key from Google AI Studio)
+# Initialize the official GenAI Client
 ai_client = genai.Client()
 
 class ChatRequest(BaseModel):
