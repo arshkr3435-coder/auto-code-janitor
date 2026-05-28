@@ -3,21 +3,26 @@ import base64
 import httpx
 from typing import Dict, Any, List
 
+# Fallback defaults for the API base url endpoint
 GITLAB_URL = os.getenv("GITLAB_URL", "https://gitlab.com/api/v4")
-GITLAB_TOKEN = os.getenv("GITLAB_PERSONAL_ACCESS_TOKEN")
 
-headers = {
-    "Authorization": f"Bearer {GITLAB_TOKEN}",
-    "Content-Type": "application/json"
-}
-
-async def get_repository_tree(project_id: str, branch: str = "main") -> Dict[str, Any]:
+async def get_repository_tree(project_id: str, branch: str = "main", **kwargs) -> Dict[str, Any]:
     """Retrieves the directory layout and configuration filenames from GitLab."""
     url = f"{GITLAB_URL}/projects/{project_id}/repository/tree"
     params = {"ref": branch, "recursive": True, "per_page": 100}
     
+    # Dynamically extract the token passed by this specific user session
+    token = kwargs.get("gitlab_token")
+    if not token:
+        return {"error": "Authentication Failed: Missing user 'gitlab_token' property in payload."}
+        
+    request_headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    
     async with httpx.AsyncClient() as client:
-        response = await client.get(url, headers=headers, params=params)
+        response = await client.get(url, headers=request_headers, params=params)
         if response.status_code != 200:
             return {"error": f"Failed to fetch repo tree: {response.text}"}
         
@@ -25,15 +30,25 @@ async def get_repository_tree(project_id: str, branch: str = "main") -> Dict[str
         files = [item["path"] for item in response.json() if item["type"] == "blob"]
         return {"files": files}
 
-async def get_file_content(project_id: str, file_path: str, branch: str = "main") -> Dict[str, Any]:
+async def get_file_content(project_id: str, file_path: str, branch: str = "main", **kwargs) -> Dict[str, Any]:
     """Fetches and decodes raw text content of a specific file from GitLab."""
     # File path must be URL-encoded (e.g., models/transaction.py -> models%2Ftransaction.py)
     encoded_path = httpx.URL(file_path).path
     url = f"{GITLAB_URL}/projects/{project_id}/repository/files/{encoded_path}"
     params = {"ref": branch}
     
+    # Dynamically extract the token passed by this specific user session
+    token = kwargs.get("gitlab_token")
+    if not token:
+        return {"error": "Authentication Failed: Missing user 'gitlab_token' property in payload."}
+        
+    request_headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    
     async with httpx.AsyncClient() as client:
-        response = await client.get(url, headers=headers, params=params)
+        response = await client.get(url, headers=request_headers, params=params)
         if response.status_code != 200:
             return {"error": f"Failed to fetch file content: {response.text}"}
         
@@ -46,10 +61,21 @@ async def commit_code_changes(
     project_id: str, 
     branch: str, 
     commit_message: str, 
-    actions: List[Dict[str, Any]]
+    actions: List[Dict[str, Any]],
+    **kwargs
 ) -> Dict[str, Any]:
     """Applies multiple file actions (create, update, delete) in a single atomic GitLab commit."""
     url = f"{GITLAB_URL}/projects/{project_id}/repository/commits"
+    
+    # Dynamically extract the token passed by this specific user session
+    token = kwargs.get("gitlab_token")
+    if not token:
+        return {"error": "Authentication Failed: Missing user 'gitlab_token' property in payload."}
+        
+    request_headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
     
     # Map the agent's actions array directly to the GitLab Commits API payload format
     gitlab_actions = []
@@ -67,7 +93,7 @@ async def commit_code_changes(
     }
     
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, headers=headers, json=payload)
+        response = await client.post(url, headers=request_headers, json=payload)
         if response.status_code not in [201, 200]:
             return {"error": f"Commit failed: {response.text}"}
         

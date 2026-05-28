@@ -6,6 +6,9 @@ from pydantic import BaseModel
 from google import genai
 from google.genai import types
 from src.mcp.client import handle_agent_tool_call
+from pydantic import BaseModel
+from typing import Optional
+
 
 app = FastAPI(
     title="Auto-Code Janitor Agent API",
@@ -18,7 +21,13 @@ ai_client = genai.Client()
 class ChatRequest(BaseModel):
     prompt: str
     project_id: str
-    branch: str = "main"
+    
+    # Dynamic Credentials passed by the user/frontend
+    gitlab_token: Optional[str] = None
+    gitlab_project_path: Optional[str] = None
+    
+    mongodb_uri: Optional[str] = None
+    mongodb_database: Optional[str] = None
 
 @app.get("/", response_class=HTMLResponse)
 def read_root():
@@ -95,7 +104,12 @@ async def process_agent_turn(request: ChatRequest):
             if "branch" not in arguments:
                 arguments["branch"] = request.branch
 
-            # Execute the real tool code!
+            # Inject dynamic credential context properties into the arguments package
+            arguments["gitlab_token"] = request.gitlab_token
+            arguments["mongodb_uri"] = request.mongodb_uri
+            arguments["mongodb_database"] = request.mongodb_database
+
+            # Execute the real tool code passing along the dynamic credential map!
             tool_response = await handle_agent_tool_call(
                 function_name=call.name,
                 arguments=arguments
