@@ -69,6 +69,32 @@ async def process_agent_turn(request: ChatRequest):
                     },
                     "required": ["query_string"]
                 }
+            ),
+            types.FunctionDeclaration(
+                name="commit_code_changes",
+                description="Applies multiple file actions (create, update, delete) in a single atomic GitLab commit to add or modify files.",
+                parameters={
+                    "type": "OBJECT",
+                    "properties": {
+                        "project_id": {"type": "STRING"},
+                        "branch": {"type": "STRING"},
+                        "commit_message": {"type": "STRING"},
+                        "actions": {
+                            "type": "ARRAY",
+                            "description": "List of actions to perform.",
+                            "items": {
+                                "type": "OBJECT",
+                                "properties": {
+                                    "action": {"type": "STRING", "description": "Can be 'create', 'update', or 'delete'"},
+                                    "file_path": {"type": "STRING"},
+                                    "content": {"type": "STRING"}
+                                },
+                                "required": ["action", "file_path", "content"]
+                            }
+                        }
+                    },
+                    "required": ["project_id", "branch", "commit_message", "actions"]
+                }
             )
         ]
 
