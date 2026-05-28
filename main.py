@@ -21,6 +21,7 @@ ai_client = genai.Client()
 class ChatRequest(BaseModel):
     prompt: str
     project_id: str
+    branch: str = "main"
     
     # Dynamic Credentials passed by the user/frontend
     gitlab_token: Optional[str] = None
