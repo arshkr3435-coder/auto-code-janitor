@@ -78,7 +78,7 @@ async def commit_code_changes(
         return {"error": "Authentication Failed: Missing user 'gitlab_token' property in payload."}
         
     request_headers = {
-        "Authorization": f"Bearer {token}",
+        "PRIVATE-TOKEN": token,
         "Content-Type": "application/json"
     }
     
