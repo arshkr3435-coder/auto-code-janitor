@@ -8,7 +8,9 @@ GITLAB_URL = os.getenv("GITLAB_URL", "https://gitlab.com/api/v4")
 
 async def get_repository_tree(project_id: str, branch: str = "main", **kwargs) -> Dict[str, Any]:
     """Retrieves the directory layout and configuration filenames from GitLab."""
-    url = f"{GITLAB_URL}/projects/{project_id}/repository/tree"
+    # Safe URL-encoding for namespaced project IDs (e.g., group/repo -> group%2Frepo)
+    encoded_project_id = project_id.replace("/", "%2F")
+    url = f"{GITLAB_URL}/projects/{encoded_project_id}/repository/tree"
     params = {"ref": branch, "recursive": True, "per_page": 100}
     
     # Dynamically extract the token passed by this specific user session
@@ -32,9 +34,10 @@ async def get_repository_tree(project_id: str, branch: str = "main", **kwargs) -
 
 async def get_file_content(project_id: str, file_path: str, branch: str = "main", **kwargs) -> Dict[str, Any]:
     """Fetches and decodes raw text content of a specific file from GitLab."""
-    # File path must be URL-encoded (e.g., models/transaction.py -> models%2Ftransaction.py)
+    # Safe URL-encoding for namespaced project IDs and the inner target file path
+    encoded_project_id = project_id.replace("/", "%2F")
     encoded_path = httpx.URL(file_path).path
-    url = f"{GITLAB_URL}/projects/{project_id}/repository/files/{encoded_path}"
+    url = f"{GITLAB_URL}/projects/{encoded_project_id}/repository/files/{encoded_path}"
     params = {"ref": branch}
     
     # Dynamically extract the token passed by this specific user session
@@ -65,7 +68,9 @@ async def commit_code_changes(
     **kwargs
 ) -> Dict[str, Any]:
     """Applies multiple file actions (create, update, delete) in a single atomic GitLab commit."""
-    url = f"{GITLAB_URL}/projects/{project_id}/repository/commits"
+    # Safe URL-encoding for namespaced project IDs (e.g., group/repo -> group%2Frepo)
+    encoded_project_id = project_id.replace("/", "%2F")
+    url = f"{GITLAB_URL}/projects/{encoded_project_id}/repository/commits"
     
     # Dynamically extract the token passed by this specific user session
     token = kwargs.get("gitlab_token")
